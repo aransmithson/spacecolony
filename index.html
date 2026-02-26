@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#030a12">
+<title>NOVA COLONY</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:   #030a12;
+  --bg2:  #060f1a;
+  --pnl:  rgba(4,11,20,0.98);
+  --b:    rgba(0,200,255,0.14);
+  --bhi:  rgba(0,200,255,0.42);
+  --c:    #00c8ff;
+  --cd:   rgba(0,200,255,0.5);
+  --o:    #ff6a00;
+  --od:   rgba(255,106,0,0.6);
+  --g:    #00ff9d;
+  --gd:   rgba(0,255,157,0.5);
+  --y:    #ffd200;
+  --r:    #ff3b5c;
+  --tx:   #ccdde8;
+  --txd:  rgba(204,221,232,0.42);
+  --nav:  56px;
+  --hdr:  54px;
+  --bar:  38px;
+  --saf:  env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%;background:var(--bg)}
+body{
+  font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--tx);
+  height:100%;height:100dvh;overflow:hidden;position:fixed;width:100%;
+  font-size:14px;-webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.018) 3px,rgba(0,0,0,.018) 4px);
+}
+#sf{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+@keyframes twk{from{opacity:.08}to{opacity:.9}}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;position:relative;z-index:1}
+
+/* HEADER */
+header{
+  flex-shrink:0;height:var(--hdr);
+  background:linear-gradient(180deg,rgba(0,200,255,.07) 0%,transparent 100%);
+  border-bottom:1px solid var(--bhi);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;position:relative;
+}
+header::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--c),transparent);
+}
+.logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:17px;letter-spacing:3px;color:var(--c);text-shadow:0 0 18px rgba(0,200,255,.55);line-height:1}
+.logo em{color:var(--o);font-style:normal}
+.logo-sub{font-size:8px;letter-spacing:2px;color:var(--txd);font-family:'Share Tech Mono',monospace;margin-top:2px}
+.h-r{text-align:right}
+.h-ml{font-size:8px;letter-spacing:2px;color:var(--txd);font-family:'Share Tech Mono',monospace}
+#met{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--g)}
+
+/* RESOURCE STRIP */
+.rstrip{
+  flex-shrink:0;height:var(--bar);background:rgba(2,7,16,.92);
+  border-bottom:1px solid var(--b);display:flex;overflow-x:auto;scrollbar-width:none;
+}
+.rstrip::-webkit-scrollbar{display:none}
+.rc{
+  flex:none;min-width:72px;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:0 10px;
+  border-right:1px solid var(--b);
+}
+.rc:last-child{border-right:none}
+.rl{font-size:8px;letter-spacing:1.5px;color:var(--txd);font-family:'Share Tech Mono',monospace;text-transform:uppercase;line-height:1}
+.rv{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--c);line-height:1;margin-top:2px}
+
+/* CONTENT */
+#content{flex:1;overflow:hidden;position:relative}
+.scr{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;display:none;
+  padding-bottom:calc(var(--nav) + var(--saf) + 8px);
+}
+.scr.on{display:block}
+#s-space{padding-bottom:0;overflow:hidden;background:var(--bg)}
+.scr::-webkit-scrollbar{width:2px}
+.scr::-webkit-scrollbar-thumb{background:var(--bhi);border-radius:1px}
+
+/* CANVAS */
+#cv{display:block;width:100%;height:100%}
+.hud{position:absolute;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.7;color:var(--cd);pointer-events:none;text-shadow:0 0 8px rgba(0,200,255,.4)}
+.htl{top:10px;left:12px}
+.htr{top:10px;right:12px;text-align:right}
+.hbl{bottom:calc(var(--nav) + var(--saf) + 14px);left:12px}
+.hbr{bottom:calc(var(--nav) + var(--saf) + 14px);right:12px;text-align:right}
+
+/* PANEL */
+.panel{background:var(--pnl);padding:16px;border-bottom:1px solid var(--b);position:relative}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--bhi),transparent)}
+.gap{height:8px;background:var(--bg2);flex-shrink:0}
+.pt{
+  font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:var(--cd);
+  text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.pt::before{content:'';display:inline-block;width:2px;height:12px;background:var(--c);box-shadow:0 0 8px rgba(0,200,255,.7);flex-shrink:0}
+
+/* RES CARDS */
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rcard{background:rgba(0,200,255,.025);border:1px solid var(--b);padding:11px 10px;display:flex;align-items:center;gap:10px}
+.rico{font-size:22px;flex-shrink:0;width:28px;text-align:center}
+.rname{font-size:11px;font-weight:600;color:var(--txd);letter-spacing:.3px}
+.ramt{font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--g);line-height:1.1}
+.rrate{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--gd)}
+
+/* TELEM */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tbox{background:rgba(0,200,255,.03);border:1px solid var(--b);padding:14px 10px;text-align:center}
+.tv{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--c);display:block;line-height:1}
+.tl{font-size:8px;letter-spacing:2px;color:var(--txd);text-transform:uppercase;margin-top:5px}
+
+/* PHASE */
+.ph-n{font-size:13px;font-weight:700;letter-spacing:.8px;margin-bottom:2px}
+.ph-s{font-size:10px;color:var(--txd);font-family:'Share Tech Mono',monospace;margin-bottom:10px}
+.ph-t{width:100%;height:5px;background:rgba(255,255,255,.05);overflow:hidden;margin-bottom:4px}
+.ph-f{height:100%;background:linear-gradient(90deg,var(--c),var(--g));transition:width .4s}
+.ph-p{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--c);text-align:right}
+
+/* BUILD CARDS */
+.bcard{
+  background:rgba(0,200,255,.02);border:1px solid var(--b);
+  padding:14px;margin-bottom:8px;touch-action:manipulation;
+  transition:border-color .12s,background .12s;
+}
+.bcard.aff{border-color:rgba(0,200,255,.28)}
+.bcard.aff:active{background:rgba(0,200,255,.07)}
+.bcard.locked{opacity:.35;pointer-events:none}
+.bt{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.bn{font-weight:700;font-size:15px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.bc{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--o);background:rgba(255,106,0,.1);border:1px solid rgba(255,106,0,.28);padding:2px 8px;flex-shrink:0;min-width:32px;text-align:center}
+.bd{font-size:12px;color:var(--txd);margin-bottom:10px}
+.bf{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bco{display:flex;flex-wrap:wrap;gap:6px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--y)}
+.buybtn{
+  background:linear-gradient(135deg,rgba(0,200,255,.2),rgba(0,200,255,.06));
+  border:1px solid var(--bhi);color:var(--c);
+  font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;
+  padding:8px 14px;cursor:pointer;flex-shrink:0;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+.buybtn:active{background:rgba(0,200,255,.3)}
+
+/* TECH CARDS */
+.tcard{
+  background:rgba(0,200,255,.02);border:1px solid var(--b);
+  padding:14px;margin-bottom:8px;cursor:pointer;touch-action:manipulation;
+  transition:border-color .12s;
+}
+.tcard.done{border-color:rgba(0,255,157,.25);background:rgba(0,255,157,.025);pointer-events:none}
+.tcard.locked{opacity:.35;pointer-events:none}
+.tcard:not(.done):not(.locked):active{background:rgba(0,200,255,.07)}
+.tct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.tcn{font-weight:700;font-size:14px;flex:1}
+.tbdg{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1.5px;padding:3px 8px;flex-shrink:0}
+.tbdn{color:var(--g);border:1px solid rgba(0,255,157,.3);background:rgba(0,255,157,.1)}
+.tbav{color:var(--c);border:1px solid var(--bhi);background:rgba(0,200,255,.1)}
+.tblk{color:var(--txd);border:1px solid var(--b)}
+.tcd{font-size:11px;color:var(--txd);margin-bottom:5px}
+.tcc{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--y)}
+.tcr{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--r);margin-top:3px}
+
+/* FLEET */
+.fl{font-size:9px;letter-spacing:2px;color:var(--txd);font-family:'Share Tech Mono',monospace;text-transform:uppercase;margin-bottom:6px}
+.ssel{
+  width:100%;background:rgba(0,200,255,.04);border:1px solid var(--bhi);
+  color:var(--tx);padding:13px 12px;font-family:'Share Tech Mono',monospace;
+  font-size:12px;-webkit-appearance:none;appearance:none;outline:none;
+  border-radius:0;margin-bottom:12px;
+}
+.lbtn{
+  width:100%;padding:16px;margin-top:4px;
+  background:linear-gradient(135deg,rgba(255,106,0,.24),rgba(255,106,0,.06));
+  border:1px solid var(--o);color:var(--o);
+  font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:3px;
+  cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;
+}
+.lbtn:active{background:rgba(255,106,0,.38)}
+
+/* SHIP CARDS */
+.scard{background:rgba(255,106,0,.03);border:1px solid var(--b);padding:12px 14px;margin-bottom:8px}
+.st{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sn{font-weight:600;font-size:14px}
+.ss{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px}
+.traveling{color:var(--o)}.mining{color:var(--y)}.returning{color:var(--c)}
+.ssub{font-size:10px;color:var(--txd);font-family:'Share Tech Mono',monospace;margin-bottom:7px}
+.ptr{width:100%;height:4px;background:rgba(255,255,255,.06);overflow:hidden;position:relative}
+.pf{height:100%;background:linear-gradient(90deg,var(--o),var(--y));transition:width .4s linear;position:relative}
+.pf::after{content:'';position:absolute;right:-1px;top:0;bottom:0;width:6px;background:rgba(255,255,255,.6);filter:blur(2px)}
+.pf.ret{background:linear-gradient(90deg,var(--c),var(--g))}
+
+/* LOG */
+.lr{font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 0;border-bottom:1px solid rgba(0,200,255,.05);display:flex;gap:8px;line-height:1.4}
+.lt{color:var(--cd);flex-shrink:0}
+.lm{color:var(--txd)}
+.lm.success{color:var(--gd)}
+.lm.launch{color:var(--od)}
+
+/* NAV */
+nav{
+  flex-shrink:0;height:calc(var(--nav) + var(--saf));
+  background:rgba(1,5,13,.98);border-top:1px solid var(--bhi);
+  display:flex;position:relative;z-index:100;padding-bottom:var(--saf);
+}
+nav::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c),transparent)}
+.nb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:transparent;border:none;border-right:1px solid var(--b);
+  color:var(--txd);font-family:'Orbitron',sans-serif;font-size:7px;
+  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  transition:color .15s;padding:0;position:relative;
+}
+.nb:last-child{border-right:none}
+.nb.on{color:var(--c)}
+.nb.on::before{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:var(--c);box-shadow:0 0 10px rgba(0,200,255,.7)}
+.ni{font-size:20px;line-height:1}
+
+/* NOTIF */
+#notif{
+  position:fixed;top:calc(var(--hdr) + var(--bar) + 10px);
+  left:14px;right:14px;z-index:9999;
+  background:rgba(0,200,255,.09);border:1px solid var(--bhi);border-left:3px solid var(--c);
+  padding:11px 14px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--c);
+  opacity:0;transform:translateY(-6px);transition:all .22s;pointer-events:none;
+}
+#notif.show{opacity:1;transform:translateY(0)}
+
+/* BANNER */
+@keyframes bin{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:translateY(0)}}
+#banner{
+  display:none;position:fixed;top:calc(var(--hdr) + var(--bar));
+  left:0;right:0;z-index:9998;
+  background:linear-gradient(90deg,rgba(0,255,157,.1),rgba(0,200,255,.1));
+  border-bottom:1px solid var(--g);padding:10px 16px;text-align:center;
+  font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;color:var(--g);
+  animation:bin .3s;
+}
+
+/* DESKTOP */
+@media(min-width:768px){
+  body{overflow:auto;position:static}
+  html{overflow:auto}
+  #app{height:100vh}
+  #content{display:grid;grid-template-columns:1fr 1.8fr 1fr 1fr;gap:1px;background:var(--b);overflow:hidden}
+  .scr{position:static!important;display:block!important;padding-bottom:8px;height:100%;overflow-y:auto;max-height:100%}
+  #s-space{overflow:hidden;padding-bottom:0}
+  nav{display:none}
+  .hbl,.hbr{bottom:14px}
+}
+</style>
+</head>
+<body>
+<div id="sf"></div>
+<div id="app">
+
+  <header>
+    <div>
+      <div class="logo">NOVA<em>COLONY</em></div>
+      <div class="logo-sub">DEEP SPACE RESOURCE INITIATIVE</div>
+    </div>
+    <div class="h-r">
+      <div class="h-ml">MISSION ELAPSED</div>
+      <div id="met">000:00:00</div>
+    </div>
+  </header>
+
+  <div class="rstrip">
+    <div class="rc"><div class="rl">IRON</div><div class="rv" id="ri">500</div></div>
+    <div class="rc"><div class="rl">NICKEL</div><div class="rv" id="rn">150</div></div>
+    <div class="rc"><div class="rl">TITAN</div><div class="rv" id="rt">30</div></div>
+    <div class="rc"><div class="rl">RARE</div><div class="rv" id="rr">5</div></div>
+    <div class="rc"><div class="rl">ENERGY</div><div class="rv" id="re">300</div></div>
+    <div class="rc"><div class="rl">FOOD</div><div class="rv" id="rf">200</div></div>
+  </div>
+
+  <div id="content">
+
+    <!-- SPACE -->
+    <div class="scr on" id="s-space">
+      <canvas id="cv"></canvas>
+      <div class="hud htl">SECTOR: PROXIMA-7<br><span id="h-rt">EN ROUTE: 0</span></div>
+      <div class="hud htr">BELT: ACTIVE<br>TARGETS: <span id="h-tg">8</span></div>
+      <div class="hud hbl" style="color:rgba(0,255,157,.5)">▲ SYSTEMS NOMINAL</div>
+      <div class="hud hbr">POP: <span id="h-po" style="color:var(--c)">12</span> · SHIPS: <span id="h-sh" style="color:var(--o)">0</span></div>
+    </div>
+
+    <!-- BASE -->
+    <div class="scr" id="s-base">
+      <div class="panel">
+        <div class="pt">Resource Inventory</div>
+        <div class="rgrid" id="rgrid"></div>
+      </div>
+      <div class="gap"></div>
+      <div class="panel">
+        <div class="pt">Fleet Telemetry</div>
+        <div class="tgrid">
+          <div class="tbox"><span class="tv" id="tel-r">0.0</span><div class="tl">Res / sec</div></div>
+          <div class="tbox"><span class="tv" id="tel-s">0</span><div class="tl">In Space</div></div>
+          <div class="tbox"><span class="tv" id="tel-p">1</span><div class="tl">Colony Lvl</div></div>
+          <div class="tbox"><span class="tv" id="tel-e">100%</span><div class="tl">Efficiency</div></div>
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="panel">
+        <div class="pt">Colony Expansion</div>
+        <div class="ph-n" id="phn">PHASE I — ESTABLISHMENT</div>
+        <div class="ph-s">Goal: <span id="phg" style="color:var(--c)">Collect 500 resources</span></div>
+        <div class="ph-t"><div class="ph-f" id="phb" style="width:0%"></div></div>
+        <div class="ph-p" id="php">0%</div>
+      </div>
+      <div class="gap"></div>
+      <div class="panel">
+        <div class="pt">Mission Log</div>
+        <div id="loglist"></div>
+      </div>
+    </div>
+
+    <!-- BUILD -->
+    <div class="scr" id="s-build">
+      <div class="panel" style="padding-bottom:8px">
+        <div class="pt">Colony Infrastructure</div>
+        <div id="blist"></div>
+      </div>
+    </div>
+
+    <!-- FLEET -->
+    <div class="scr" id="s-fleet">
+      <div class="panel">
+        <div class="pt">Launch Mission</div>
+        <div class="fl">Target Asteroid</div>
+        <select class="ssel" id="tgt">
+          <option value="iron">⬡ Ferrous Asteroid — Iron</option>
+          <option value="nickel">◈ Nickelite Cluster — Nickel</option>
+          <option value="titanium">◆ Titanium Core</option>
+          <option value="rare">✦ Rare Earth Node</option>
+        </select>
+        <div class="fl">Ship Class</div>
+        <select class="ssel" id="shp">
+          <option value="hauler">Mk-I Hauler — Cost: 50 Iron</option>
+          <option value="corvette">Mk-II Corvette — 100 Fe · 50 Ni</option>
+          <option value="leviathan">Mk-III Leviathan — 200·100·50</option>
+        </select>
+        <button class="lbtn" onclick="doLaunch()">▶ LAUNCH MISSION</button>
+      </div>
+      <div class="gap"></div>
+      <div class="panel">
+        <div class="pt">Active Fleet</div>
+        <div id="slist"><div style="color:var(--txd);font-family:'Share Tech Mono',monospace;font-size:11px">No ships deployed. Build a Launch Pad first.</div></div>
+      </div>
+    </div>
+
+    <!-- TECH -->
+    <div class="scr" id="s-tech">
+      <div class="panel" style="padding-bottom:8px">
+        <div class="pt">Research &amp; Technology</div>
+        <div id="tlist"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav>
+    <button class="nb on" id="nb-space"  onclick="go('space')"><span class="ni">🌌</span>SPACE</button>
+    <button class="nb"    id="nb-base"   onclick="go('base')"><span class="ni">📊</span>BASE</button>
+    <button class="nb"    id="nb-build"  onclick="go('build')"><span class="ni">🏗</span>BUILD</button>
+    <button class="nb"    id="nb-fleet"  onclick="go('fleet')"><span class="ni">🚀</span>FLEET</button>
+    <button class="nb"    id="nb-tech"   onclick="go('tech')"><span class="ni">🔬</span>TECH</button>
+  </nav>
+</div>
+
+<div id="notif"></div>
+<div id="banner"></div>
+
+<script>
+const G={
+  res:{iron:500,nickel:150,titanium:30,rare:5,energy:300,food:200},
+  bld:{solar_array:0,greenhouse:0,habitat:0,launch_pad:0,refinery:0,research_lab:0,deep_scanner:0},
+  tch:{advanced_propulsion:false,deep_mining:false,ion_drive:false,nanotech:false,fusion_reactor:false},
+  ships:[],sid:1,astMined:0,totalRes:0,pop:12,met:0,log:[],phase:1,
+};
+
+const BLDS=[
+  {id:'solar_array',  name:'Solar Array',         ico:'☀', desc:'+1 energy per second',                   cost:{iron:10},                         col:'#ffd200'},
+  {id:'greenhouse',   name:'Greenhouse',           ico:'🌿',desc:'+0.5 food per second',                   cost:{iron:15,energy:5},                col:'#00ff9d'},
+  {id:'habitat',      name:'Habitat Module',       ico:'🏠',desc:'+5 colonists permanently',               cost:{iron:30,nickel:10},               col:'#00c8ff'},
+  {id:'launch_pad',   name:'Launch Pad',           ico:'🚀',desc:'Required to dispatch mining ships',      cost:{iron:50,energy:20},               col:'#ff6a00'},
+  {id:'refinery',     name:'Ore Refinery',         ico:'⚙', desc:'+25% yield from all missions',          cost:{iron:80,nickel:20},               col:'#ccdde8'},
+  {id:'research_lab', name:'Research Lab',         ico:'🔬',desc:'Unlocks the technology tree',            cost:{iron:100,nickel:30,energy:30},    col:'#00c8ff'},
+  {id:'deep_scanner', name:'Deep Space Scanner',   ico:'📡',desc:'Reveals rare earth asteroid nodes',      cost:{iron:150,nickel:50,titanium:10},  col:'#ff6a00'},
+];
+
+const TECHS=[
+  {id:'advanced_propulsion',name:'Advanced Propulsion',desc:'Ships travel 40% faster',      cost:{iron:200,nickel:100},    req:'research_lab'},
+  {id:'deep_mining',        name:'Deep Core Mining',   desc:'+50% resources per mission',   cost:{iron:150,nickel:80},     req:'research_lab'},
+  {id:'ion_drive',          name:'Ion Drive System',   desc:'Ships carry 2× cargo',         cost:{nickel:200,titanium:50}, req:'advanced_propulsion'},
+  {id:'nanotech',           name:'Nano Fabrication',   desc:'Building costs −20%',          cost:{titanium:100,rare:30},   req:'research_lab'},
+  {id:'fusion_reactor',     name:'Fusion Reactor',     desc:'+2 energy/sec permanently',    cost:{titanium:200,rare:50},   req:'research_lab'},
+];
+
+const SHIPS={
+  hauler:   {name:'Mk-I Hauler',     cap:50, travel:20,mine:10,cost:{iron:50}},
+  corvette: {name:'Mk-II Corvette',  cap:100,travel:14,mine:8, cost:{iron:100,nickel:50}},
+  leviathan:{name:'Mk-III Leviathan',cap:250,travel:25,mine:6, cost:{iron:200,nickel:100,titanium:50}},
+};
+
+const PHASES=[
+  {phase:1,goal:500,     label:'Collect 500 resources',    name:'PHASE I — ESTABLISHMENT'},
+  {phase:2,goal:2000,    label:'Collect 2,000 resources',  name:'PHASE II — GROWTH'},
+  {phase:3,goal:10000,   label:'Collect 10,000 resources', name:'PHASE III — EXPANSION'},
+  {phase:4,goal:50000,   label:'Collect 50,000 resources', name:'PHASE IV — INDEPENDENCE'},
+  {phase:5,goal:Infinity,label:'Maximum phase reached!',   name:'PHASE V — DOMINION'},
+];
+
+// ── CANVAS ──────────────────────────────────
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const stars=Array.from({length:200},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.3+.2,b:Math.random()*.5+.2,spd:Math.random()*.00006+.00002}));
+const asteroids=[];for(let i=0;i<8;i++)mkA();
+function mkA(){asteroids.push({x:.05+Math.random()*.9,y:.06+Math.random()*.26,r:Math.random()*11+5,rot:Math.random()*Math.PI*2,rs:(Math.random()-.5)*.018,col:`hsl(${14+Math.random()*22},26%,${22+Math.random()*18}%)`,alive:true});}
+const colony={x:.5,y:.82,r:30};
+const cShips={};
+
+function rsz(){const p=cv.parentElement;cv.width=p.clientWidth;cv.height=p.clientHeight;}
+rsz();window.addEventListener('resize',rsz);
+
+function drawCanvas(dt){
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  for(const s of stars){s.x-=s.spd*dt;if(s.x<0)s.x=1;ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.b})`;ctx.fill();}
+  ctx.save();ctx.strokeStyle='rgba(255,106,0,.07)';ctx.lineWidth=1;ctx.setLineDash([6,12]);ctx.beginPath();ctx.moveTo(0,.36*H);ctx.lineTo(W,.36*H);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  for(const a of asteroids){
+    if(!a.alive)continue;
+    a.rot+=a.rs;const ax=a.x*W,ay=a.y*H;
+    ctx.save();ctx.translate(ax,ay);ctx.rotate(a.rot);ctx.beginPath();
+    for(let i=0;i<8;i++){const ang=(i/8)*Math.PI*2,rr=a.r*(.72+Math.sin(i*2.1)*.28);i===0?ctx.moveTo(Math.cos(ang)*rr,Math.sin(ang)*rr):ctx.lineTo(Math.cos(ang)*rr,Math.sin(ang)*rr);}
+    ctx.closePath();ctx.fillStyle=a.col;ctx.strokeStyle='rgba(255,140,40,.32)';ctx.lineWidth=1;ctx.fill();ctx.stroke();ctx.restore();
+    const ag=ctx.createRadialGradient(ax,ay,0,ax,ay,a.r*2.8);ag.addColorStop(0,'rgba(255,90,10,.07)');ag.addColorStop(1,'transparent');ctx.beginPath();ctx.arc(ax,ay,a.r*2.8,0,Math.PI*2);ctx.fillStyle=ag;ctx.fill();
+  }
+  const cx2=colony.x*W,cy2=colony.y*H,cr=colony.r;
+  const atm=ctx.createRadialGradient(cx2,cy2,cr,cx2,cy2,cr*3);atm.addColorStop(0,'rgba(0,200,255,.14)');atm.addColorStop(1,'transparent');ctx.beginPath();ctx.arc(cx2,cy2,cr*3,0,Math.PI*2);ctx.fillStyle=atm;ctx.fill();
+  const pg=ctx.createRadialGradient(cx2-cr*.3,cy2-cr*.3,0,cx2,cy2,cr);pg.addColorStop(0,'#1b4262');pg.addColorStop(.5,'#0a2232');pg.addColorStop(1,'#051018');ctx.beginPath();ctx.arc(cx2,cy2,cr,0,Math.PI*2);ctx.fillStyle=pg;ctx.fill();ctx.strokeStyle='rgba(0,200,255,.55)';ctx.lineWidth=1.5;ctx.stroke();
+  const now=Date.now()/1000;for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2+now*.2;ctx.beginPath();ctx.arc(cx2+Math.cos(a)*cr*.65,cy2+Math.sin(a)*cr*.65,1.8,0,Math.PI*2);ctx.fillStyle=i%2===0?'rgba(0,200,255,.95)':'rgba(255,210,0,.9)';ctx.fill();}
+  for(const[,cs]of Object.entries(cShips)){
+    if(!cs.alive)continue;
+    const tx=cs.phase==='returning'?colony.x*W:cs.ax,ty=cs.phase==='returning'?colony.y*H:cs.ay;
+    const dx=tx-cs.x,dy=ty-cs.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>4){const mv=Math.min(95*dt/1000,dist);cs.x+=dx/dist*mv;cs.y+=dy/dist*mv;}
+    const ang=Math.atan2(dy,dx);
+    ctx.save();ctx.translate(cs.x,cs.y);ctx.rotate(ang);
+    if(cs.phase!=='mining'){for(let p=0;p<3;p++){ctx.beginPath();ctx.arc(-8-p*5+(Math.random()*3),(Math.random()-.5)*4,2-p*.4,0,Math.PI*2);ctx.fillStyle=`rgba(255,${100+p*50},0,${.8-p*.25})`;ctx.fill();}}
+    ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-6,5);ctx.lineTo(-3,0);ctx.lineTo(-6,-5);ctx.closePath();
+    ctx.fillStyle=cs.phase==='returning'?'#00c8ff':'#ff6a00';ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=.6;ctx.fill();ctx.stroke();ctx.restore();
+    ctx.beginPath();ctx.moveTo(cs.x,cs.y);ctx.lineTo(cs.x-Math.cos(ang)*20,cs.y-Math.sin(ang)*20);ctx.strokeStyle=cs.phase==='returning'?'rgba(0,200,255,.22)':'rgba(255,106,0,.22)';ctx.lineWidth=1;ctx.stroke();
+  }
+}
+
+// ── HELPERS ──────────────────────────────────
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':Math.floor(n).toString();
+const canAff=c=>Object.entries(c).every(([k,v])=>(G.res[k]||0)>=v);
+function bldCost(b){const nm=G.tch.nanotech?.8:1,sc=1.15**G.bld[b.id],c={};for(const[k,v]of Object.entries(b.cost))c[k]=Math.ceil(v*sc*nm);return c;}
+function rates(){const r={iron:0,nickel:0,titanium:0,rare:0,energy:0,food:0};r.energy+=G.bld.solar_array*1;r.food+=G.bld.greenhouse*.5;if(G.tch.fusion_reactor)r.energy+=2;return r;}
+const totRate=()=>Object.values(rates()).reduce((a,b)=>a+b,0);
+const fmtM=s=>`${String(Math.floor(s/86400)).padStart(3,'0')}:${String(Math.floor(s%86400/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}`;
+
+// ── RENDER ───────────────────────────────────
+const RC=[{id:'iron',name:'Iron',ico:'⬡'},{id:'nickel',name:'Nickel',ico:'◈'},{id:'titanium',name:'Titanium',ico:'◆'},{id:'rare',name:'Rare Earth',ico:'✦'},{id:'energy',name:'Energy',ico:'⚡'},{id:'food',name:'Food',ico:'🌿'}];
+const SID=['ri','rn','rt','rr','re','rf'];
+const SK=['iron','nickel','titanium','rare','energy','food'];
+
+function renderStrip(){SK.forEach((k,i)=>document.getElementById(SID[i]).textContent=fmt(G.res[k]||0));}
+
+function renderRes(){
+  const rt=rates();
+  document.getElementById('rgrid').innerHTML=RC.map(r=>`<div class="rcard"><div class="rico">${r.ico}</div><div><div class="rname">${r.name}</div><div class="ramt">${fmt(G.res[r.id]||0)}</div><div class="rrate">${rt[r.id]>=0?'+':''}${rt[r.id].toFixed(1)}/s</div></div></div>`).join('');
+}
+
+function renderBld(){
+  document.getElementById('blist').innerHTML=BLDS.map(b=>{
+    const cost=bldCost(b),aff=canAff(cost);
+    return `<div class="bcard ${aff?'aff':'locked'}"><div class="bt"><div class="bn" style="color:${b.col}">${b.ico} ${b.name}</div><div class="bc">×${G.bld[b.id]}</div></div><div class="bd">${b.desc}</div><div class="bf"><div class="bco">${Object.entries(cost).map(([k,v])=>`<span>${k.toUpperCase()} ${fmt(v)}</span>`).join('')}</div>${aff?`<button class="buybtn" onclick="doBuy('${b.id}')">BUY</button>`:''}</div></div>`;
+  }).join('');
+}
+
+function renderTch(){
+  document.getElementById('tlist').innerHTML=TECHS.map(t=>{
+    const done=G.tch[t.id],reqOk=!t.req||G.bld[t.req]>0||G.tch[t.req],aff=canAff(t.cost);
+    let cls='',badge='';
+    if(done){cls='done';badge=`<span class="tbdg tbdn">DONE</span>`;}
+    else if(!reqOk){cls='locked';badge=`<span class="tbdg tblk">LOCKED</span>`;}
+    else if(aff){badge=`<span class="tbdg tbav">RESEARCH</span>`;}
+    else{cls='locked';badge=`<span class="tbdg tblk">NEED RES</span>`;}
+    const ok=!done&&reqOk&&aff;
+    return `<div class="tcard ${cls}" ${ok?`onclick="doTech('${t.id}')"`:''}><div class="tct"><div class="tcn">${t.name}</div>${badge}</div><div class="tcd">${t.desc}</div><div class="tcc">${Object.entries(t.cost).map(([k,v])=>`${k.toUpperCase()} ${fmt(v)}`).join(' · ')}</div>${!reqOk&&t.req?`<div class="tcr">REQUIRES: ${t.req.replace(/_/g,' ').toUpperCase()}</div>`:''}</div>`;
+  }).join('');
+}
+
+function renderShips(){
+  const el=document.getElementById('slist');
+  if(!G.ships.length){el.innerHTML=`<div style="color:var(--txd);font-family:'Share Tech Mono',monospace;font-size:11px">No ships deployed.</div>`;return;}
+  el.innerHTML=G.ships.map(s=>{
+    const dur=s.phase==='traveling'?s.tD:s.phase==='mining'?s.mD:s.rD;
+    const pct=Math.min(100,s.elapsed/dur*100).toFixed(0);
+    const sl=s.phase==='traveling'?'→ EN ROUTE':s.phase==='mining'?'⛏ MINING':'← RETURNING';
+    return `<div class="scard"><div class="st"><div class="sn">🚀 ${s.name}</div><div class="ss ${s.phase}">${sl}</div></div><div class="ssub">TARGET: ${s.target.toUpperCase()} · CARGO: ${s.cargo}/${s.cap} · ${pct}%</div><div class="ptr"><div class="pf ${s.phase==='returning'?'ret':''}" style="width:${pct}%"></div></div></div>`;
+  }).join('');
+}
+
+function renderLog(){
+  document.getElementById('loglist').innerHTML=[...G.log].reverse().slice(0,25).map(l=>`<div class="lr"><span class="lt">[${l.t}]</span><span class="lm ${l.tp}">${l.msg}</span></div>`).join('');
+}
+
+function renderStats(){
+  const en=G.ships.filter(s=>s.phase!=='idle').length;
+  document.getElementById('h-rt').textContent='EN ROUTE: '+en;
+  document.getElementById('h-po').textContent=G.pop;
+  document.getElementById('h-sh').textContent=G.ships.length;
+  document.getElementById('tel-r').textContent='+'+totRate().toFixed(1);
+  document.getElementById('tel-s').textContent=en;
+  document.getElementById('tel-p').textContent=G.phase;
+  document.getElementById('tel-e').textContent=G.tch.advanced_propulsion?'140%':'100%';
+}
+
+function renderPhase(){
+  const ph=PHASES.find(p=>p.phase===G.phase);
+  const pct=ph.goal===Infinity?100:Math.min(100,G.totalRes/ph.goal*100);
+  document.getElementById('phn').textContent=ph.name;
+  document.getElementById('phg').textContent=ph.label;
+  document.getElementById('phb').style.width=pct+'%';
+  document.getElementById('php').textContent=pct.toFixed(0)+'%';
+}
+
+function renderAll(){renderStrip();renderRes();renderBld();renderTch();renderShips();renderLog();renderStats();renderPhase();}
+
+// ── ACTIONS ──────────────────────────────────
+function doBuy(id){
+  const b=BLDS.find(x=>x.id===id),cost=bldCost(b);
+  if(!canAff(cost))return;
+  for(const[k,v]of Object.entries(cost))G.res[k]-=v;
+  G.bld[id]++;if(id==='habitat')G.pop+=5;
+  addLog(`Built ${b.name} #${G.bld[id]}`,'success');notify(`${b.ico} ${b.name} constructed`);renderAll();
+}
+
+function doTech(id){
+  const t=TECHS.find(x=>x.id===id);if(!canAff(t.cost))return;
+  for(const[k,v]of Object.entries(t.cost))G.res[k]-=v;
+  G.tch[id]=true;addLog(`Researched: ${t.name}`,'success');notify(`✦ ${t.name} unlocked!`);renderAll();
+}
+
+function doLaunch(){
+  if(!G.bld.launch_pad){notify('⚠ Build a Launch Pad first!');return;}
+  const tid=document.getElementById('shp').value,target=document.getElementById('tgt').value,st=SHIPS[tid];
+  if(!canAff(st.cost)){notify('⚠ Insufficient resources!');return;}
+  for(const[k,v]of Object.entries(st.cost))G.res[k]-=v;
+  const sm=G.tch.advanced_propulsion?(G.tch.ion_drive?.5:.6):1;
+  const ship={id:G.sid++,name:`${st.name} #${G.sid-1}`,type:tid,target,phase:'traveling',elapsed:0,tD:st.travel*sm,mD:st.mine,rD:st.travel*sm,cargo:0,cap:st.cap*(G.tch.ion_drive?2:1)};
+  G.ships.push(ship);
+  const ast=asteroids.find(a=>a.alive)||{x:.5,y:.2};
+  cShips[ship.id]={x:colony.x*cv.width,y:colony.y*cv.height,ax:ast.x*cv.width,ay:ast.y*cv.height,phase:'traveling',alive:true};
+  addLog(`LAUNCH: ${ship.name} → ${target.toUpperCase()}`,'launch');notify(`🚀 ${ship.name} launched!`);renderAll();
+}
+
+// ── TICK ─────────────────────────────────────
+function tickShips(ds){
+  for(const s of G.ships){
+    s.elapsed+=ds;
+    if(s.phase==='traveling'&&s.elapsed>=s.tD){s.phase='mining';s.elapsed=0;if(cShips[s.id])cShips[s.id].phase='mining';addLog(`${s.name} reached ${s.target} — mining`,'success');}
+    else if(s.phase==='mining'&&s.elapsed>=s.mD){const ym=(G.bld.refinery?1.25:1)*(G.tch.deep_mining?1.5:1);s.cargo=Math.floor(s.cap*ym);s.phase='returning';s.elapsed=0;G.astMined++;if(cShips[s.id])cShips[s.id].phase='returning';addLog(`${s.name} mined ${s.cargo} ${s.target} — returning`,'success');}
+    else if(s.phase==='returning'&&s.elapsed>=s.rD){G.res[s.target]=(G.res[s.target]||0)+s.cargo;G.totalRes+=s.cargo;addLog(`${s.name} delivered +${s.cargo} ${s.target}`,'success');notify(`📦 +${s.cargo} ${s.target} delivered`);if(cShips[s.id])cShips[s.id].alive=false;delete cShips[s.id];s._done=true;const ph=PHASES.find(p=>p.phase===G.phase);if(G.totalRes>=ph.goal&&G.phase<5){G.phase++;G.pop+=10;const npn=PHASES.find(p=>p.phase===G.phase).name;addLog(`COLONY ADVANCE: ${npn}`,'success');showBanner(`🌟 ${npn}`);}}
+  }
+  G.ships=G.ships.filter(s=>!s._done);
+}
+
+function tickRes(ds){const rt=rates();for(const[k,v]of Object.entries(rt))G.res[k]=Math.max(0,(G.res[k]||0)+v*ds);}
+
+// ── LOOP ─────────────────────────────────────
+let lastT=Date.now(),lastR=0;
+function loop(ts){
+  const now=Date.now(),dt=Math.min(now-lastT,200);lastT=now;
+  G.met+=dt/1000;tickRes(dt/1000);tickShips(dt/1000);drawCanvas(dt);
+  document.getElementById('met').textContent=fmtM(G.met);
+  if(ts-lastR>140){renderAll();lastR=ts;}
+  requestAnimationFrame(loop);
+}
+
+// ── NAV ──────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  document.getElementById('nb-'+id).classList.add('on');
+  if(id==='space')setTimeout(rsz,10);
+}
+
+// ── NOTIFY / LOG ─────────────────────────────
+let nT;
+function notify(msg){const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');clearTimeout(nT);nT=setTimeout(()=>el.classList.remove('show'),2700);}
+let bT;
+function showBanner(msg){const el=document.getElementById('banner');el.textContent=msg;el.style.display='block';clearTimeout(bT);bT=setTimeout(()=>el.style.display='none',4500);}
+function addLog(msg,tp=''){const m=Math.floor(G.met/60),s=Math.floor(G.met%60);G.log.push({t:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`,msg,tp});if(G.log.length>80)G.log.shift();}
+
+// ── STARFIELD ────────────────────────────────
+(function(){
+  const sf=document.getElementById('sf');let h='';
+  for(let i=0;i<100;i++){const x=Math.random()*100,y=Math.random()*100,sz=Math.random()*1.8+.3,dur=Math.random()*4+2,del=Math.random()*4;h+=`<div style="position:absolute;left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(255,255,255,.8);animation:twk ${dur}s ${del}s ease-in-out infinite alternate"></div>`;}
+  sf.innerHTML=h;
+})();
+
+// ── INIT ─────────────────────────────────────
+addLog('Nova Colony initialized — all systems online','success');
+addLog('TIP: Build Solar Array → Launch Pad → launch your first ship!','');
+renderAll();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
